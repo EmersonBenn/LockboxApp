@@ -26,6 +26,7 @@
             android:text="@string/disconnected"
             android:textSize="16sp"/>
     </LinearLayout>
+
     <RelativeLayout android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -36,86 +37,20 @@
             android:text="@string/label_led"
             android:textSize="18sp"/>
         <Space android:layout_width="5dp"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:id="@+id/space" />
+
         <ToggleButton android:id="@+id/led0_value"
-            android:layout_below="@id/led_label"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:layout_margin="10dp"
             android:textOff=""
             android:textOn=""
-            android:background="@drawable/led_red" />
-        <ToggleButton android:id="@+id/led1_value"
-            android:layout_below="@id/led_label"
-            android:layout_toRightOf="@id/led0_value"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_margin="10dp"
-            android:textOff=""
-            android:textOn=""
-            android:background="@drawable/led_green"/>
+            android:background="@drawable/led_red"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_below="@+id/led_label"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="13dp" />
     </RelativeLayout>
-    <RelativeLayout android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="10dp">
-        <TextView android:id="@+id/button_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/label_button"
-            android:textSize="18sp"/>
-        <Space
-            android:layout_below="@id/button_label"
-            android:layout_width="5dp"
-            android:layout_height="wrap_content"/>
-        <ToggleButton android:id="@+id/button0_value"
-            android:layout_below="@id/button_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textOff=""
-            android:textOn="@string/pressed"
-            android:textColor="#000000"
-            android:enabled="false"/>
-        <ToggleButton android:id="@+id/button1_value"
-            android:layout_below="@id/button_label"
-            android:layout_toRightOf="@id/button0_value"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textOff=""
-            android:textOn="@string/pressed"
-            android:textColor="#000000"
-            android:enabled="false"/>
-    </RelativeLayout>
-    <RelativeLayout android:orientation="vertical"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="10dp">
-        <TextView android:id="@+id/label_data"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/label_data"
-            android:textSize="18sp"/>
-        <Space android:layout_width="5dp"
-            android:layout_height="wrap_content"/>
-        <EditText android:id="@+id/data_value"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:textSize="18sp"
-            android:layout_below="@id/label_data"
-            android:inputType="text" />
-        <Button android:id="@+id/data_read"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/read"
-            android:layout_below="@id/data_value"
-            android:onClick="onDataRead"/>
-        <Button android:id="@+id/data_write"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/write"
-            android:layout_toRightOf="@id/data_read"
-            android:layout_below="@id/data_value"
-            android:onClick="onDataWrite"/>
-    </RelativeLayout>
+
 </LinearLayout >

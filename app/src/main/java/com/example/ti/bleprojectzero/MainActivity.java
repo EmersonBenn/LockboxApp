@@ -57,6 +57,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
@@ -70,6 +71,12 @@ import android.widget.Button;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
+
+
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -91,6 +98,10 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<ScanFilter> mScanFilters = new ArrayList<>();
     private Map<BluetoothDevice, Integer> mBtDevices = new HashMap<>();
     private TableLayout mTableDevices;
+    private FirebaseAuth mFirebaseAuth;
+    private FirebaseUser mFirebaseUser;
+    private DatabaseReference mDatabase;
+
 
     // Tag used for logging
     private static final String TAG = "MainActivity";
@@ -126,6 +137,11 @@ public class MainActivity extends AppCompatActivity {
     // Queue for writing descriptors
     private Queue<BluetoothGattDescriptor> descriptorWriteQueue = new LinkedList<>();
     private Queue<BluetoothGattCharacteristic> characteristicQueue = new LinkedList<>();
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    private GoogleApiClient client;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -144,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
 
         //  For Android M: Check if app have location permission
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_COARSE_LOCATION)) {
                     // Show explanation on why this is needed
                     final AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -158,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
                             ActivityCompat.requestPermissions(MainActivity.this,
                                     new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
                                     MY_PERMISSIONS_REQUEST_ACCESS_COARSE);
-                                 }
+                        }
                     });
                     builder.show();
 
@@ -174,12 +190,23 @@ public class MainActivity extends AppCompatActivity {
         // Configure scan filter on device name, so the scan result
         // only displays devices with Project Zero running.
         ScanFilter filter = new ScanFilter.Builder()
-                .setDeviceName("Project Zero")
+                .setDeviceName("Lockbox")
                 .build();
         mScanFilters.add(filter);
 
         // Configure default scan settings
         mScanSettings = new ScanSettings.Builder().build();
+
+        // Initialize Firebase Auth
+        mFirebaseAuth = FirebaseAuth.getInstance();
+        mFirebaseUser = mFirebaseAuth.getCurrentUser();
+
+        if (mFirebaseUser == null) {
+            // Not logged in, launch the Log In activity
+            loadLogInView();
+            mFirebaseUser = mFirebaseAuth.getCurrentUser();
+        }
+
 
     }
 
@@ -205,12 +232,13 @@ public class MainActivity extends AppCompatActivity {
         if (mBluetoothAdapter != null && mBluetoothAdapter.isEnabled() && mScanning) {
             // Stop scanning
             scanLeDevice(false);
+            FirebaseAuth.getInstance().signOut();       //logout user
         }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
-    String permissions[], int[] grantResults) {
+                                           String permissions[], int[] grantResults) {
         // Callback have been received from a permission request
         switch (requestCode) {
             case MY_PERMISSIONS_REQUEST_ACCESS_COARSE: {
@@ -244,6 +272,13 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
         }
+    }
+
+    private void loadLogInView() {
+        Intent intent = new Intent(this, LogInActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
     }
 
     /**
@@ -286,7 +321,7 @@ public class MainActivity extends AppCompatActivity {
      * @return A {@code List} of supported services.
      */
     public List<BluetoothGattService> getSupportedGattServices() {
-        if (mBluetoothGatt == null){
+        if (mBluetoothGatt == null) {
             return null;
         }
 
@@ -312,7 +347,7 @@ public class MainActivity extends AppCompatActivity {
 
         // If there is only 1 item in the queue, then read it. If more than 1, it is handled
         // asynchronously in the callback
-        if((characteristicQueue.size() == 1)) {
+        if ((characteristicQueue.size() == 1)) {
             mBluetoothGatt.readCharacteristic(characteristic);
         }
     }
@@ -338,7 +373,7 @@ public class MainActivity extends AppCompatActivity {
      * Enable or disable notification on a give characteristic.
      *
      * @param characteristic Characteristic to act on.
-     * @param enable If true, enable notification. Otherwise, disable it.
+     * @param enable         If true, enable notification. Otherwise, disable it.
      */
     public void setCharacteristicNotification(BluetoothGattCharacteristic characteristic,
                                               boolean enable) {
@@ -351,7 +386,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Write descriptor for notification
         BluetoothGattDescriptor descriptor = characteristic.getDescriptor(ProjectZeroAttributes.UUID_CHARACTERISTIC_UPDATE_NOTIFICATION_DESCRIPTOR);
-        descriptor.setValue(enable ? BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE : new byte[] { 0x00, 0x00 });
+        descriptor.setValue(enable ? BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE : new byte[]{0x00, 0x00});
         writeGattDescriptor(descriptor);
 
     }
@@ -361,7 +396,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void scanLeDevice(final boolean enable) {
 
-        if(mLEScanner == null) {
+        if (mLEScanner == null) {
             Log.d(TAG, "Could not get LEScanner object");
             return;
         }
@@ -387,7 +422,7 @@ public class MainActivity extends AppCompatActivity {
          */
         private void enableButtonNotifications(BluetoothGatt gatt) {
             // Loop through the characteristics for the button service
-            for(BluetoothGattCharacteristic characteristic : gatt.getService(ProjectZeroAttributes.UUID_BUTTON_SERVICE).getCharacteristics()){
+            for (BluetoothGattCharacteristic characteristic : gatt.getService(ProjectZeroAttributes.UUID_BUTTON_SERVICE).getCharacteristics()) {
                 // Enable notification on the characteristic
                 final int charaProp = characteristic.getProperties();
                 if ((charaProp | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
@@ -446,15 +481,14 @@ public class MainActivity extends AppCompatActivity {
             // Broadcast the results
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
-            }
-            else{
+            } else {
                 Log.d(TAG, "onCharacteristicRead error: " + status);
             }
 
             // Handle the next element from the queues
-            if(characteristicQueue.size() > 0)
+            if (characteristicQueue.size() > 0)
                 mBluetoothGatt.readCharacteristic(characteristicQueue.element());
-            else if(descriptorWriteQueue.size() > 0)
+            else if (descriptorWriteQueue.size() > 0)
                 mBluetoothGatt.writeDescriptor(descriptorWriteQueue.element());
         }
 
@@ -479,18 +513,20 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
             if (status != BluetoothGatt.GATT_SUCCESS) {
-                Log.d(TAG, "Callback: Error writing GATT Descriptor: "+ status);
+                Log.d(TAG, "Callback: Error writing GATT Descriptor: " + status);
             }
 
             // Pop the item that we just finishing writing
             descriptorWriteQueue.remove();
 
             // Continue handling items if there is more in the queues
-            if(descriptorWriteQueue.size() > 0)
+            if (descriptorWriteQueue.size() > 0)
                 mBluetoothGatt.writeDescriptor(descriptorWriteQueue.element());
-            else if(characteristicQueue.size() > 0)
+            else if (characteristicQueue.size() > 0)
                 mBluetoothGatt.readCharacteristic(characteristicQueue.element());
-        };
+        }
+
+        ;
 
     };
 
@@ -503,17 +539,16 @@ public class MainActivity extends AppCompatActivity {
         public void onScanResult(int callbackType, ScanResult result) {
 
             final BluetoothDevice btDevice = result.getDevice();
-            if (btDevice == null){
+            if (btDevice == null) {
                 Log.e("ScanCallback", "Could not get bluetooth device");
                 return;
             }
 
             // Check if device already added to list of scanned devices
             String macAddress = btDevice.getAddress();
-            for(BluetoothDevice dev : mBtDevices.keySet())
-            {
+            for (BluetoothDevice dev : mBtDevices.keySet()) {
                 // Device already added, do nothing
-                if(dev.getAddress().equals(macAddress) ){
+                if (dev.getAddress().equals(macAddress)) {
                     return;
                 }
             }
@@ -535,7 +570,7 @@ public class MainActivity extends AppCompatActivity {
         // Clean current table view
         mTableDevices.removeAllViews();
 
-        for(final BluetoothDevice savedDevice : mBtDevices.keySet()) {
+        for (final BluetoothDevice savedDevice : mBtDevices.keySet()) {
 
             // Get RSSI of this device
             int rssi = mBtDevices.get(savedDevice);
@@ -548,7 +583,7 @@ public class MainActivity extends AppCompatActivity {
             TextView tvRssi = new TextView(MainActivity.this);
             tvRssi.setText(Integer.toString(rssi));
             TableRow.LayoutParams params = new TableRow.LayoutParams(0);
-            params.setMargins(20,0,20,0);
+            params.setMargins(20, 0, 20, 0);
             tvRssi.setLayoutParams(params);
 
             // Add Text view for device, displaying name and address
@@ -569,12 +604,40 @@ public class MainActivity extends AppCompatActivity {
                     // Create the activity for the selected device
                     final Intent intent = new Intent(MainActivity.this, SelectedDeviceActivity.class);
                     intent.putExtra(SelectedDeviceActivity.EXTRAS_DEVICE_NAME, savedDevice.getName());
+                    mDatabase = FirebaseDatabase.getInstance().getReference("Lockbox1");
+                    Query queryRef = mDatabase.child("Users").child(mFirebaseUser.getUid());
+                    queryRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            // This method is called once with the initial value and again
+                            // whenever data at this location is updated.
+                            //String key = dataSnapshot.getKey();
+                            //Log.d(TAG, "Value is: " + value);
+                            if (dataSnapshot.exists()) {
 
-                    // Connect to device
-                    connectToDevice(savedDevice);
+                                // Connect to device
+                                connectToDevice(savedDevice);
 
-                    // start activity
-                    startActivity(intent);
+                                // start activity
+                                startActivity(intent);
+                            } else {
+                                android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(MainActivity.this);
+                                builder.setMessage(R.string.connection_error_message)
+                                        .setTitle(R.string.connection_error_title)
+                                        .setPositiveButton(android.R.string.ok, null);
+                                android.support.v7.app.AlertDialog dialog = builder.create();
+                                dialog.show();
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError error) {
+                            // Failed to read value
+                            Log.w(TAG, "Failed to read value.", error.toException());
+                        }
+                    });
+
+
                 }
             });
 
@@ -611,21 +674,17 @@ public class MainActivity extends AppCompatActivity {
 
         if ((UUID.fromString(ProjectZeroAttributes.BUTTON0_STATE)).equals(characteristic.getUuid())) {
             // State of button 0 has changed. Add id and value to broadcast
-            intent.putExtra(EXTRA_BUTTON0, characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8,0));
-        }
-        else if ((UUID.fromString(ProjectZeroAttributes.BUTTON1_STATE)).equals(characteristic.getUuid())) {
+            intent.putExtra(EXTRA_BUTTON0, characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0));
+        } else if ((UUID.fromString(ProjectZeroAttributes.BUTTON1_STATE)).equals(characteristic.getUuid())) {
             // State of button 1 has changed. Add id and value to broadcast
-            intent.putExtra(EXTRA_BUTTON1, characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8,0));
-        }
-        else if ((UUID.fromString(ProjectZeroAttributes.LED0_STATE)).equals(characteristic.getUuid())) {
+            intent.putExtra(EXTRA_BUTTON1, characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0));
+        } else if ((UUID.fromString(ProjectZeroAttributes.LED0_STATE)).equals(characteristic.getUuid())) {
             // State of led 0 has changed. Add id and value to broadcast
-            intent.putExtra(EXTRA_LED0, characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8,0));
-        }
-        else if ((UUID.fromString(ProjectZeroAttributes.LED1_STATE)).equals(characteristic.getUuid())) {
+            intent.putExtra(EXTRA_LED0, characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0));
+        } else if ((UUID.fromString(ProjectZeroAttributes.LED1_STATE)).equals(characteristic.getUuid())) {
             // State of led 1 has changed. Add id and value to broadcast
-            intent.putExtra(EXTRA_LED1, characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8,0));
-        }
-        else {
+            intent.putExtra(EXTRA_LED1, characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0));
+        } else {
             // Write the data formatted as a string
             final byte[] data = characteristic.getValue();
             if (data != null && data.length > 0) {
@@ -639,13 +698,29 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Write gatt descriptor if queue is ready.
      */
-    private void writeGattDescriptor(BluetoothGattDescriptor d){
+    private void writeGattDescriptor(BluetoothGattDescriptor d) {
         // Add descriptor to the write queue
         descriptorWriteQueue.add(d);
         // If there is only 1 item in the queue, then write it. If more than 1, it will be handled
         // in the onDescriptorWrite callback
-        if(descriptorWriteQueue.size() == 1){
+        if (descriptorWriteQueue.size() == 1) {
             mBluetoothGatt.writeDescriptor(d);
         }
+    }
+
+
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+
     }
 }

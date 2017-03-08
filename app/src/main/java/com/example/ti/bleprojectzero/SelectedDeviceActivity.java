@@ -86,7 +86,7 @@ public class SelectedDeviceActivity extends AppCompatActivity {
 
         // Get UI elements
         mConnectionState = (TextView) findViewById(R.id.connection_state);
-        mDataField = (EditText) findViewById(R.id.data_value);
+       // mDataField = (EditText) findViewById(R.id.data_value);
 
         // Get instance of main activity
         mMainActivity = (MainActivity) MainActivity.activity;
@@ -150,16 +150,16 @@ public class SelectedDeviceActivity extends AppCompatActivity {
                     // If the a toggle button ID is sent as extra data, call a function to display the button state.
                     // Otherwise, display the extra data in the data service text field
                     if(intent.hasExtra(MainActivity.EXTRA_BUTTON0)) {
-                        setToggleButtonState(R.id.button0_value, intent.getIntExtra(MainActivity.EXTRA_BUTTON0, 0));
+                       // setToggleButtonState(R.id.button0_value, intent.getIntExtra(MainActivity.EXTRA_BUTTON0, 0));
                     }
                     else if(intent.hasExtra(MainActivity.EXTRA_BUTTON1)) {
-                        setToggleButtonState(R.id.button1_value, intent.getIntExtra(MainActivity.EXTRA_BUTTON1, 0));
+                       // setToggleButtonState(R.id.button1_value, intent.getIntExtra(MainActivity.EXTRA_BUTTON1, 0));
                     }
                     else if(intent.hasExtra(MainActivity.EXTRA_LED0)) {
                         setToggleButtonState(R.id.led0_value, intent.getIntExtra(MainActivity.EXTRA_LED0, 0));
                     }
                     else if(intent.hasExtra(MainActivity.EXTRA_LED1)) {
-                        setToggleButtonState(R.id.led1_value, intent.getIntExtra(MainActivity.EXTRA_LED1, 0));
+                       // setToggleButtonState(R.id.led1_value, intent.getIntExtra(MainActivity.EXTRA_LED1, 0));
                     }
                     else {
                         displayData(intent.getStringExtra(MainActivity.EXTRA_DATA));
@@ -240,12 +240,12 @@ public class SelectedDeviceActivity extends AppCompatActivity {
         //  Make sure LEDs and Button elemtents are unchecked
         ToggleButton b = (ToggleButton) findViewById(R.id.led0_value);
         b.setChecked(false);
-        b = (ToggleButton) findViewById(R.id.led1_value);
-        b.setChecked(false);
-        b = (ToggleButton) findViewById(R.id.button0_value);
-        b.setChecked(false);
-        b = (ToggleButton) findViewById(R.id.button1_value);
-        b.setChecked(false);
+      //  b = (ToggleButton) findViewById(R.id.led1_value);
+       // b.setChecked(false);
+      //  b = (ToggleButton) findViewById(R.id.button0_value);
+     //   b.setChecked(false);
+        //b = (ToggleButton) findViewById(R.id.button1_value);
+        //b.setChecked(false);
     }
 
     /**
@@ -314,9 +314,9 @@ public class SelectedDeviceActivity extends AppCompatActivity {
                     ToggleButton b;
                     if (characteristicName.contains("Led0")) {
                         b = (ToggleButton) findViewById(R.id.led0_value);
-                    } else if (characteristicName.contains("Led1")) {
+                    } /*else if (characteristicName.contains("Led1")) {
                         b = (ToggleButton) findViewById(R.id.led1_value);
-                    } else{
+                    }*/ else{
                         continue;
                     }
 
