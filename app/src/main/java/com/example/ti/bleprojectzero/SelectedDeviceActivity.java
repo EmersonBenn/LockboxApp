@@ -310,17 +310,17 @@ public class SelectedDeviceActivity extends AppCompatActivity {
                 uuid = gattCharacteristic.getUuid().toString();
                 String characteristicName = ProjectZeroAttributes.lookup(uuid, unknownCharaString);
 
-                // Handle LED characteristics
-                if(serviceName.contains("Unlock")) {
+                // Handle lockbox characteristics
+                if(serviceName.contains("Lockbox")) {
                     // Get button instance
                     ToggleButton b;
-                    //if (characteristicName.contains("Led0")) {
-                    b = (ToggleButton) findViewById(R.id.led0_value);
-                    //} /*else if (characteristicName.contains("Led1")) {
-                     //   b = (ToggleButton) findViewById(R.id.led1_value);
-                    //}*/ else{
-                    //    continue;
-                    //}
+                    if (characteristicName.contains("Unlock")) {
+                        b = (ToggleButton) findViewById(R.id.led0_value);
+                        //} /*else if (characteristicName.contains("Led1")) {
+                        //   b = (ToggleButton) findViewById(R.id.led1_value);
+                    }else{
+                        continue;
+                    }
 
                     // Add action for clicking the LED button
                     if(b!= null) {
@@ -346,12 +346,12 @@ public class SelectedDeviceActivity extends AppCompatActivity {
                                     value[13] = (byte) 0x22;
                                     value[14] = (byte) 0x11;
                                     value[15] = (byte) 0x00;
-
+                                }
                                     //need to get key from firebase
-                                } /*else {
+                                 else {
 
                                     value[0] = (byte) (0 & 0xFF);
-                                }*/
+                                }
 
                                 // Write value
                                 gattCharacteristic.setValue(value);
