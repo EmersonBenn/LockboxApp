@@ -49,12 +49,17 @@ public class ProjectZeroAttributes {
     public static String LED_SERVICE = "F0001110-0451-4000-B000-000000000000";
     public static String BUTTON_SERVICE = "F0001120-0451-4000-B000-000000000000";
     public static String DATA_SERVICE = "F0001130-0451-4000-B000-000000000000";
+    public static String LOCKBOXSERVICE = "0000BA55-0000-1000-8000-00805F9B34FB";
     public static String LED0_STATE = "F0001111-0451-4000-B000-000000000000";
     public static String LED1_STATE = "F0001112-0451-4000-B000-000000000000";
     public static String BUTTON0_STATE = "F0001121-0451-4000-B000-000000000000";
     public static String BUTTON1_STATE = "F0001122-0451-4000-B000-000000000000";
     public static String STRING_CHAR = "F0001131-0451-4000-B000-000000000000";
     public static String STREAM_CHAR = "F0001132-0451-4000-B000-000000000000";
+    public static String UNLOCK = "F000BEEF-0451-4000-B000-000000000000";
+    public static String BATTERY = "F000BEFF-0451-4000-B000-000000000000";
+    public static String TIMEOPEN = "F000BEAA-0451-4000-B000-000000000000";
+    public static String LOCKSTATUS = "F000BEAB-0451-4000-B000-000000000000";
 
     public final static UUID UUID_CHARACTERISTIC_UPDATE_NOTIFICATION_DESCRIPTOR = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"); // UUID for notification descriptor
     public final static UUID UUID_BUTTON_SERVICE = UUID.fromString(BUTTON_SERVICE);
@@ -65,6 +70,7 @@ public class ProjectZeroAttributes {
         gattAttributes.put(LED_SERVICE.toLowerCase(), "Led Service");
         gattAttributes.put(BUTTON_SERVICE.toLowerCase(), "Button Service");
         gattAttributes.put(DATA_SERVICE.toLowerCase(), "Data Service");
+        gattAttributes.put(LOCKBOXSERVICE.toLowerCase(), "Lockbox Service");
         // Characteristics
         gattAttributes.put(LED0_STATE.toLowerCase(), "Led0 State");
         gattAttributes.put(LED1_STATE.toLowerCase(), "Led1 State");
@@ -72,6 +78,12 @@ public class ProjectZeroAttributes {
         gattAttributes.put(BUTTON1_STATE.toLowerCase(), "Button1 State");
         gattAttributes.put(STRING_CHAR.toLowerCase(), "String char");
         gattAttributes.put(STREAM_CHAR.toLowerCase(), "Stream char");
+        gattAttributes.put(UNLOCK.toLowerCase(), "Unlock");
+        gattAttributes.put(BATTERY.toLowerCase(), "Battery");
+        gattAttributes.put(TIMEOPEN.toLowerCase(), "TimeOpen");
+        gattAttributes.put(LOCKSTATUS.toLowerCase(), "LockStatus");
+
+
     }
 
     /**

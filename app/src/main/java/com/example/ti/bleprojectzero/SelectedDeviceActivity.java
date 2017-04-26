@@ -56,6 +56,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import com.google.firebase.database.*;
+
 
 public class SelectedDeviceActivity extends AppCompatActivity {
 
@@ -309,16 +311,16 @@ public class SelectedDeviceActivity extends AppCompatActivity {
                 String characteristicName = ProjectZeroAttributes.lookup(uuid, unknownCharaString);
 
                 // Handle LED characteristics
-                if(serviceName.contains("Led")) {
+                if(serviceName.contains("Unlock")) {
                     // Get button instance
                     ToggleButton b;
-                    if (characteristicName.contains("Led0")) {
-                        b = (ToggleButton) findViewById(R.id.led0_value);
-                    } /*else if (characteristicName.contains("Led1")) {
-                        b = (ToggleButton) findViewById(R.id.led1_value);
-                    }*/ else{
-                        continue;
-                    }
+                    //if (characteristicName.contains("Led0")) {
+                    b = (ToggleButton) findViewById(R.id.led0_value);
+                    //} /*else if (characteristicName.contains("Led1")) {
+                     //   b = (ToggleButton) findViewById(R.id.led1_value);
+                    //}*/ else{
+                    //    continue;
+                    //}
 
                     // Add action for clicking the LED button
                     if(b!= null) {
@@ -326,23 +328,40 @@ public class SelectedDeviceActivity extends AppCompatActivity {
 
                             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                                 // Write value to 1 if button is checked, and to 0 otherwise
-                                byte[] value = new byte[1];
+                                byte[] value = new byte[16];
                                 if (isChecked) {
-                                    value[0] = (byte) (1 & 0xFF);
-                                } else {
+                                    value[0] = (byte) 0xFF; //initial key is hardcoaded for now
+                                    value[1] = (byte) 0xEE;
+                                    value[2] = (byte) 0xDD;
+                                    value[3] = (byte) 0xCC;
+                                    value[4] = (byte) 0xBB;
+                                    value[5] = (byte) 0xAA;
+                                    value[6] = (byte) 0x99;
+                                    value[7] = (byte) 0x88;
+                                    value[8] = (byte) 0x77;
+                                    value[9] = (byte) 0x66;
+                                    value[10] = (byte) 0x55;
+                                    value[11] = (byte) 0x44;
+                                    value[12] = (byte) 0x33;
+                                    value[13] = (byte) 0x22;
+                                    value[14] = (byte) 0x11;
+                                    value[15] = (byte) 0x00;
+
+                                    //need to get key from firebase
+                                } /*else {
 
                                     value[0] = (byte) (0 & 0xFF);
-                                }
+                                }*/
 
                                 // Write value
                                 gattCharacteristic.setValue(value);
-                                mMainActivity.writeCharacteristic(gattCharacteristic);
+                                mMainActivity.writeCharacteristic(gattCharacteristic); // write value
                             }
                         });
                     }
 
                     // Read initial values of the LEDs
-                    mMainActivity.readCharacteristic(gattCharacteristic);
+                    //mMainActivity.readCharacteristic(gattCharacteristic);
                 }
                 // save discovered characteristics
                 mGattCharacteristics.put(characteristicName, gattCharacteristic);
