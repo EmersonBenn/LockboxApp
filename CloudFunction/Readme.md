@@ -1,1 +1,0 @@
-This is the Firebase Cloud Function to generate the new passkey. Whenever the numberUnlocked firebase db entry changes, the cloud function performs an SHA-256 on the contantenation of the old passkey and the salt and updates this as the new passkey.
