@@ -8,8 +8,8 @@
 
     <string name="label_state">State:</string>
     <string name="label_data">Data:</string>
-    <string name="label_led">Toggle Lock:</string>
-    <string name="label_button">Unlock:</string>
+    <string name="label_led">Access Granted:</string>
+    <string name="label_button">Unlock</string>
 
     <string name="disconnected">Disconnected</string>
     <string name="connected">Connected</string>

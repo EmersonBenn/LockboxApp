@@ -47,6 +47,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -261,8 +262,8 @@ public class SelectedDeviceActivity extends AppCompatActivity {
     private void clearUI() {
         mDataField.setText("");
         //  Make sure LEDs and Button elemtents are unchecked
-        ToggleButton b = (ToggleButton) findViewById(R.id.led0_value);
-        b.setChecked(false);
+        //Button b = (Button) findViewById(R.id.led0_value);
+        //b.setChecked(false);
       //  b = (ToggleButton) findViewById(R.id.led1_value);
        // b.setChecked(false);
       //  b = (ToggleButton) findViewById(R.id.button0_value);
@@ -334,9 +335,9 @@ public class SelectedDeviceActivity extends AppCompatActivity {
                 // Handle lockbox characteristics
                 if(serviceName.contains("Lockbox")) {
                     // Get button instance
-                    ToggleButton b;
+                    Button b;
                     if (characteristicName.contains("Unlock")) {
-                        b = (ToggleButton) findViewById(R.id.led0_value);
+                        b = (Button) findViewById(R.id.led0_value);
                         //} /*else if (characteristicName.contains("Led1")) {
                         //   b = (ToggleButton) findViewById(R.id.led1_value);
                     }else{
@@ -345,12 +346,12 @@ public class SelectedDeviceActivity extends AppCompatActivity {
 
                     // Add action for clicking the LED button
                     if(b!= null) {
-                        b.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                        b.setOnClickListener(new View.OnClickListener() {
 
-                            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                            public void onClick(View v) {
                                 // Write value to 1 if button is checked, and to 0 otherwise
                                 byte[] value = new byte[16];
-                                if (isChecked) {
+                                //if (isChecked) {
                                     /*value[0] = (byte) 0xFF; //initial key is hardcoaded for now
                                     value[1] = (byte) 0xEE;
                                     value[2] = (byte) 0xDD;
@@ -368,13 +369,13 @@ public class SelectedDeviceActivity extends AppCompatActivity {
                                     value[14] = (byte) 0x11;
                                     value[15] = (byte) 0x00; */
 
-                                    System.arraycopy(passkey, 0, value, 0, 16);
-                                }
+                                System.arraycopy(passkey, 0, value, 0, 16);
+                               // }
                                     //need to get key from firebase
-                                 else {
-                                    for (int i = 0; i < 16; i++)
-                                        value[i] = (byte) (0);
-                                }
+                                 //else {
+                                   // for (int i = 0; i < 16; i++)
+                                     //   value[i] = (byte) (0);
+                                //}
 
                                 // Write value
                                 gattCharacteristic.setValue(value);
