@@ -68,6 +68,9 @@ public class SelectedDeviceActivity extends AppCompatActivity {
     private String mDeviceName;
     private MainActivity mMainActivity;
     private HashMap<String, BluetoothGattCharacteristic> mGattCharacteristics = new HashMap<>();
+    private DatabaseReference mDatabase;
+    private byte[] passkey = new byte[16];
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,6 +95,24 @@ public class SelectedDeviceActivity extends AppCompatActivity {
 
         // Get instance of main activity
         mMainActivity = (MainActivity) MainActivity.activity;
+
+        //Get passkey from Firebase
+        mDatabase = FirebaseDatabase.getInstance().getReference("Lockbox1/passkey");
+        mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String keyString = (String) dataSnapshot.getValue();
+                passkey = hexStringToByteArray(keyString);
+
+                // do your stuff here with value
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
     @Override
@@ -330,7 +351,7 @@ public class SelectedDeviceActivity extends AppCompatActivity {
                                 // Write value to 1 if button is checked, and to 0 otherwise
                                 byte[] value = new byte[16];
                                 if (isChecked) {
-                                    value[0] = (byte) 0xFF; //initial key is hardcoaded for now
+                                    /*value[0] = (byte) 0xFF; //initial key is hardcoaded for now
                                     value[1] = (byte) 0xEE;
                                     value[2] = (byte) 0xDD;
                                     value[3] = (byte) 0xCC;
@@ -345,12 +366,14 @@ public class SelectedDeviceActivity extends AppCompatActivity {
                                     value[12] = (byte) 0x33;
                                     value[13] = (byte) 0x22;
                                     value[14] = (byte) 0x11;
-                                    value[15] = (byte) 0x00;
+                                    value[15] = (byte) 0x00; */
+
+                                    System.arraycopy(passkey, 0, value, 0, 16);
                                 }
                                     //need to get key from firebase
                                  else {
-
-                                    value[0] = (byte) (0 & 0xFF);
+                                    for (int i = 0; i < 16; i++)
+                                        value[i] = (byte) (0);
                                 }
 
                                 // Write value
@@ -409,5 +432,14 @@ public class SelectedDeviceActivity extends AppCompatActivity {
                 mMainActivity.writeCharacteristic(characteristic);
             }
         }
+    }
+    public static byte[] hexStringToByteArray(String s) {
+        int len = s.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+                    + Character.digit(s.charAt(i+1), 16));
+        }
+        return data;
     }
 }
