@@ -46,6 +46,7 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -58,6 +59,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import com.google.firebase.database.*;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 
 public class SelectedDeviceActivity extends AppCompatActivity {
@@ -71,7 +74,11 @@ public class SelectedDeviceActivity extends AppCompatActivity {
     private HashMap<String, BluetoothGattCharacteristic> mGattCharacteristics = new HashMap<>();
     private DatabaseReference mDatabase;
     private byte[] passkey = new byte[16];
-
+    private long timesOpened;
+    private boolean unlockTried;
+    private FirebaseAuth mFirebaseAuth;
+    private FirebaseUser mFirebaseUser;
+    private static final String TAG = "SelectedDeviceActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,9 +104,13 @@ public class SelectedDeviceActivity extends AppCompatActivity {
         // Get instance of main activity
         mMainActivity = (MainActivity) MainActivity.activity;
 
+        // Get firebase auth info
+        /*mFirebaseAuth = FirebaseAuth.getInstance();
+        mFirebaseUser = mFirebaseAuth.getCurrentUser();
+        */
         //Get passkey from Firebase
-        mDatabase = FirebaseDatabase.getInstance().getReference("Lockbox1/passkey");
-        mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
+        mDatabase = FirebaseDatabase.getInstance().getReference("Lockbox1");
+        mDatabase.child("passkey").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 String keyString = (String) dataSnapshot.getValue();
@@ -107,6 +118,18 @@ public class SelectedDeviceActivity extends AppCompatActivity {
 
                 // do your stuff here with value
 
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+        //mDatabase = FirebaseDatabase.getInstance().getReference("Lockbox1/timesOpened");
+        mDatabase.child("timesOpened").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                timesOpened = (long)dataSnapshot.getValue();
             }
 
             @Override
@@ -185,8 +208,18 @@ public class SelectedDeviceActivity extends AppCompatActivity {
                     else if(intent.hasExtra(MainActivity.EXTRA_LED1)) {
                        // setToggleButtonState(R.id.led1_value, intent.getIntExtra(MainActivity.EXTRA_LED1, 0));
                     }
+                    else if(intent.hasExtra(MainActivity.EXTRA_LOCKSTATUS)){
+                        int lockStatus =  intent.getIntExtra(MainActivity.EXTRA_LOCKSTATUS, 0);
+                        Log.d(TAG, "LockStatus is: " + lockStatus);
+                        if (lockStatus == 0xFF && unlockTried){
+                            Log.d(TAG, "updating database");
+                            timesOpened++;
+                            mDatabase.child("timesOpened").setValue(timesOpened);
+                            unlockTried = false;
+                        }
+                    }
                     else {
-                        displayData(intent.getStringExtra(MainActivity.EXTRA_DATA));
+                        //displayData(intent.getStringExtra(MainActivity.EXTRA_DATA));
                     }
                     break;
                 case MainActivity.ACTION_WRITE_SUCCESS:
@@ -260,7 +293,7 @@ public class SelectedDeviceActivity extends AppCompatActivity {
      * Cleanup function called on a disconnect
      */
     private void clearUI() {
-        mDataField.setText("");
+        //mDataField.setText("");
         //  Make sure LEDs and Button elemtents are unchecked
         //Button b = (Button) findViewById(R.id.led0_value);
         //b.setChecked(false);
@@ -338,20 +371,18 @@ public class SelectedDeviceActivity extends AppCompatActivity {
                     Button b;
                     if (characteristicName.contains("Unlock")) {
                         b = (Button) findViewById(R.id.led0_value);
-                        //} /*else if (characteristicName.contains("Led1")) {
-                        //   b = (ToggleButton) findViewById(R.id.led1_value);
-                    }else{
-                        continue;
-                    }
+                        //}else{
+                        //  continue;
+                        //}
 
-                    // Add action for clicking the LED button
-                    if(b!= null) {
-                        b.setOnClickListener(new View.OnClickListener() {
+                        // Add action for clicking the LED button
+                        if (b != null) {
+                            b.setOnClickListener(new View.OnClickListener() {
 
-                            public void onClick(View v) {
-                                // Write value to 1 if button is checked, and to 0 otherwise
-                                byte[] value = new byte[16];
-                                //if (isChecked) {
+                                public void onClick(View v) {
+                                    // Write value to 1 if button is checked, and to 0 otherwise
+                                    byte[] value = new byte[16];
+                                    //if (isChecked) {
                                     /*value[0] = (byte) 0xFF; //initial key is hardcoaded for now
                                     value[1] = (byte) 0xEE;
                                     value[2] = (byte) 0xDD;
@@ -369,19 +400,40 @@ public class SelectedDeviceActivity extends AppCompatActivity {
                                     value[14] = (byte) 0x11;
                                     value[15] = (byte) 0x00; */
 
-                                System.arraycopy(passkey, 0, value, 0, 16);
-                               // }
+                                    System.arraycopy(passkey, 0, value, 0, 16);
+                                    // }
                                     //need to get key from firebase
-                                 //else {
-                                   // for (int i = 0; i < 16; i++)
-                                     //   value[i] = (byte) (0);
-                                //}
+                                    //else {
+                                    // for (int i = 0; i < 16; i++)
+                                    //   value[i] = (byte) (0);
+                                    //}
 
-                                // Write value
-                                gattCharacteristic.setValue(value);
-                                mMainActivity.writeCharacteristic(gattCharacteristic); // write value
-                            }
-                        });
+                                    // Write value
+                                    gattCharacteristic.setValue(value);
+                                    mMainActivity.writeCharacteristic(gattCharacteristic); // write value
+                                    unlockTried = true;
+                                }
+                            });
+                        }
+                    }
+
+                    if (characteristicName.contains("Battery")){
+                        //update battery level from BLE characteristic nb
+
+                    }
+                    if (characteristicName.contains("LockStatus")){
+
+                       /* byte[] lockStatus;
+                        mMainActivity.readCharacteristic(gattCharacteristic);
+                        lockStatus = gattCharacteristic.getValue();
+                        Log.d(TAG, "Handling LockStatus characteristic: "+lockStatus[0]);
+                        if (lockStatus[0] == 0xFF && unlockTried){
+                            Log.d(TAG, "updating database");
+                            timesOpened++;
+                            mDatabase.child("timesOpened").setValue(timesOpened);
+                            unlockTried = false;
+                        }*/
+                       mMainActivity.readCharacteristic(gattCharacteristic);
                     }
 
                     // Read initial values of the LEDs

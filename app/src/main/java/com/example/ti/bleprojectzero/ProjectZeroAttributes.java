@@ -63,7 +63,7 @@ public class ProjectZeroAttributes {
 
     public final static UUID UUID_CHARACTERISTIC_UPDATE_NOTIFICATION_DESCRIPTOR = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"); // UUID for notification descriptor
     public final static UUID UUID_BUTTON_SERVICE = UUID.fromString(BUTTON_SERVICE);
-
+    public final static UUID UUID_LOCKBOXSERVICE = UUID.fromString(LOCKBOXSERVICE);
     private static HashMap<String, String> gattAttributes = new HashMap();
     static {
         // Services
