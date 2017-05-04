@@ -133,6 +133,8 @@ public class MainActivity extends AppCompatActivity {
             "com.example.ti.bleprojectzero.EXTRA_BUTTON0";
     public final static String EXTRA_BUTTON1 =
             "com.example.ti.bleprojectzero.EXTRA_BUTTON1";
+    public final static String EXTRA_LOCKSTATUS =
+            "com.example.ti.bleprojectzero.EXTRA_LOCKSTATUS";
 
     // Queue for writing descriptors
     private Queue<BluetoothGattDescriptor> descriptorWriteQueue = new LinkedList<>();
@@ -421,12 +423,19 @@ public class MainActivity extends AppCompatActivity {
          * Enable notifications on the button clicks
          */
         private void enableButtonNotifications(BluetoothGatt gatt) {
+            String uuid;
+            String unknownCharaString = getResources().getString(R.string.unknown_characteristic);
             // Loop through the characteristics for the button service
-            for (BluetoothGattCharacteristic characteristic : gatt.getService(ProjectZeroAttributes.UUID_BUTTON_SERVICE).getCharacteristics()) {
+            for (BluetoothGattCharacteristic characteristic : gatt.getService(ProjectZeroAttributes.UUID_LOCKBOXSERVICE).getCharacteristics()) {
                 // Enable notification on the characteristic
-                final int charaProp = characteristic.getProperties();
-                if ((charaProp | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
-                    setCharacteristicNotification(characteristic, true);
+                uuid = characteristic.getUuid().toString();
+                String characteristicName = ProjectZeroAttributes.lookup(uuid, unknownCharaString);
+                if (characteristicName.contains("LockStatus") || characteristicName.contains("TimeOpen")) {
+                    final int charaProp = characteristic.getProperties();
+                    if ((charaProp | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
+                        setCharacteristicNotification(characteristic, true);
+                        Log.i(TAG, "notifications enabled");
+                    }
                 }
             }
         }
@@ -684,7 +693,10 @@ public class MainActivity extends AppCompatActivity {
         } else if ((UUID.fromString(ProjectZeroAttributes.LED1_STATE)).equals(characteristic.getUuid())) {
             // State of led 1 has changed. Add id and value to broadcast
             intent.putExtra(EXTRA_LED1, characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0));
-        } else {
+        } else if((UUID.fromString(ProjectZeroAttributes.LOCKSTATUS)).equals(characteristic.getUuid())){
+            intent.putExtra(EXTRA_LOCKSTATUS, characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0));
+        }
+        else {
             // Write the data formatted as a string
             final byte[] data = characteristic.getValue();
             if (data != null && data.length > 0) {
