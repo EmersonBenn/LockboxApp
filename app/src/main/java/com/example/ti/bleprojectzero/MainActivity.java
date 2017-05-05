@@ -78,6 +78,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.*;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -135,6 +136,10 @@ public class MainActivity extends AppCompatActivity {
             "com.example.ti.bleprojectzero.EXTRA_BUTTON1";
     public final static String EXTRA_LOCKSTATUS =
             "com.example.ti.bleprojectzero.EXTRA_LOCKSTATUS";
+    public final static String EXTRA_TIMEOPEN =
+            "com.example.ti.bleprojectzero.EXTRA_TIMEOPEN";
+    public final static String EXTRA_BATTERY =
+            "com.example.ti.bleprojectzero.EXTRA_BATTERY";
 
     // Queue for writing descriptors
     private Queue<BluetoothGattDescriptor> descriptorWriteQueue = new LinkedList<>();
@@ -695,8 +700,17 @@ public class MainActivity extends AppCompatActivity {
             intent.putExtra(EXTRA_LED1, characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0));
         } else if((UUID.fromString(ProjectZeroAttributes.LOCKSTATUS)).equals(characteristic.getUuid())){
             intent.putExtra(EXTRA_LOCKSTATUS, characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0));
-        }
-        else {
+        } else if((UUID.fromString(ProjectZeroAttributes.TIMEOPEN)).equals(characteristic.getUuid())) {
+            final byte[] data = characteristic.getValue();
+            if (data != null && data.length > 0) {
+                intent.putExtra(EXTRA_TIMEOPEN, ByteBuffer.wrap(data).getInt());
+            }
+        } else if((UUID.fromString(ProjectZeroAttributes.BATTERY)).equals(characteristic.getUuid())) {
+            final byte[] data = characteristic.getValue();
+            if (data != null && data.length > 0) {
+                intent.putExtra(EXTRA_BATTERY, ByteBuffer.wrap(data).getInt());
+            }
+        } else {
             // Write the data formatted as a string
             final byte[] data = characteristic.getValue();
             if (data != null && data.length > 0) {

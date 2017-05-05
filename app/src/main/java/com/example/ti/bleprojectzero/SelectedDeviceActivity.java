@@ -54,6 +54,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -79,6 +80,7 @@ public class SelectedDeviceActivity extends AppCompatActivity {
     private FirebaseAuth mFirebaseAuth;
     private FirebaseUser mFirebaseUser;
     private static final String TAG = "SelectedDeviceActivity";
+    private int battery;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -217,6 +219,15 @@ public class SelectedDeviceActivity extends AppCompatActivity {
                             mDatabase.child("timesOpened").setValue(timesOpened);
                             unlockTried = false;
                         }
+                    }
+                    else if(intent.hasExtra(MainActivity.EXTRA_TIMEOPEN)){
+                        int timeOpen =  intent.getIntExtra(MainActivity.EXTRA_TIMEOPEN, 0);
+                        mDatabase.child("visitLength").setValue(timeOpen);
+                        Log.d(TAG, "Visit duration of " + timeOpen + " seconds added to db");
+                    }
+                    else if(intent.hasExtra(MainActivity.EXTRA_BATTERY)){
+                        int battery = intent.getIntExtra(MainActivity.EXTRA_BATTERY, 0);
+                        mDatabase.child("Battery").setValue(battery);
                     }
                     else {
                         //displayData(intent.getStringExtra(MainActivity.EXTRA_DATA));
@@ -419,7 +430,8 @@ public class SelectedDeviceActivity extends AppCompatActivity {
 
                     if (characteristicName.contains("Battery")){
                         //update battery level from BLE characteristic nb
-
+                        mMainActivity.readCharacteristic(gattCharacteristic);
+                        //mDatabase.child("Battery").setValue(battery);
                     }
                     if (characteristicName.contains("LockStatus")){
 
